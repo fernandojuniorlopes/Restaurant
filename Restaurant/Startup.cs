@@ -12,6 +12,7 @@ using Restaurant.Data;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Restaurant.Models;
 
 namespace Restaurant
 {
@@ -55,6 +56,9 @@ namespace Restaurant
 
             services.AddControllersWithViews();
             services.AddRazorPages();
+
+            services.AddDbContext<RestaurantDbContext>(options =>
+                    options.UseSqlServer(Configuration.GetConnectionString("RestaurantDbContext")));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
