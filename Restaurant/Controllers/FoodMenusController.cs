@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -9,6 +10,8 @@ using Restaurant.Models;
 
 namespace Restaurant.Controllers
 {
+    [Authorize(Policy = "CanManageFoodMenus")]
+    //[Authorize(Roles = "manager")]
     public class FoodMenusController : Controller
     {
         private readonly RestaurantDbContext _context;
@@ -43,6 +46,7 @@ namespace Restaurant.Controllers
         }
 
         // GET: FoodMenus/Create
+        [Authorize]
         public IActionResult Create()
         {
             return View();

@@ -31,9 +31,15 @@ namespace Restaurant
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(
                     Configuration.GetConnectionString("DefaultConnection")));
-            services.AddDefaultIdentity<IdentityUser>(
+
+            /*services.AddDefaultIdentity<IdentityUser>(
                 options => options.SignIn.RequireConfirmedAccount = false)
                 .AddEntityFrameworkStores<ApplicationDbContext>();
+                */
+            services.AddIdentity<IdentityUser, IdentityRole>().
+                AddEntityFrameworkStores<ApplicationDbContext>().
+                AddDefaultTokenProviders().
+                AddDefaultUI();
 
             services.Configure<IdentityOptions>(
                 options =>
@@ -54,15 +60,28 @@ namespace Restaurant
                 }
                 );
 
-            services.AddControllersWithViews();
-            services.AddRazorPages();
+            services.AddAuthorization(
+                options =>
+                {
+                    options.AddPolicy(
+                        "CanManageFoodMenus",
+                        policy => policy.RequireRole("manager", "admin")
+                        );
+                }
+                );
 
-            services.AddDbContext<RestaurantDbContext>(options =>
+                services.AddControllersWithViews();
+                services.AddRazorPages();
+
+                services.AddDbContext<RestaurantDbContext>(options =>
                     options.UseSqlServer(Configuration.GetConnectionString("RestaurantDbContext")));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env,
+            RestaurantDbContext db,
+            UserManager<IdentityUser> userManager,
+            RoleManager<IdentityRole> roleManager)
         {
             if (env.IsDevelopment())
             {
@@ -90,6 +109,18 @@ namespace Restaurant
                     pattern: "{controller=Home}/{action=Index}/{id?}");
                 endpoints.MapRazorPages();
             });
+
+            SeedData.CreateRolesAsync(roleManager).Wait();
+
+            if (env.IsDevelopment())
+            {
+                SeedData.Populate(db);
+                SeedData.PopulateUsersAsync(userManager).Wait();
+            }
+            else
+            {
+                //make sure that there is an admin account
+            }
         }
     }
 }
